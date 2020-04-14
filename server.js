@@ -14,6 +14,7 @@ const LocalStrategy = require('passport-local').Strategy
 // ---------------------------------------------------------------------------------------------------------------------
 const User = require('./models/User')
 const UserTemporary = require('./models/UserTemporary')
+const ResetPassword = require('./models/ResetPassword')
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 mongoose.set('useFindAndModify', false)
@@ -78,6 +79,11 @@ app.get('/forgotPassword', (req, res) => {
 // ---------------------------------------------------------------------------------------------------------------------
 // -- Requests ---------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
+app.post('/signin', urlencodedParser, passport.authenticate('local', {
+    successRedirect: '/user',
+    failureRedirect: '/signin'
+}))
+
 app.post('/signup', urlencodedParser, async (req, res) => {
     const { name, password, email } = req.body
     const token = generate_token(25)
@@ -95,7 +101,7 @@ app.post('/signup', urlencodedParser, async (req, res) => {
         const savedUserTemporary = await newUserTemporary.save()
         res.status(201).send(`${savedUserTemporary.name} Un email de confirmation vous a été envoyé à l'adresse suivante : ${savedUserTemporary.email} !`)
 
-        sendConfirmEmail(name, email, token).catch(console.error);
+        sendEmail(name, email, token, 'confirmSignUp').catch(console.error);
     } catch (err) {
         return res.status(500).send('Erreur du serveur')
     }
@@ -136,10 +142,26 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
     }
 })
 
-app.post('/signin', urlencodedParser, passport.authenticate('local', {
-    successRedirect: '/user',
-    failureRedirect: '/signin'
-}))
+app.post('/forgotPassword/send', urlencodedParser, async (req, res) => {
+    const { name } = req.body
+    const token = generate_token(25)
+
+    const resetPasswordTemporary = new ResetPassword({ name,  token})
+    try {
+        const userToReset = await User.findOne({ name })
+        if (userToReset) {
+            const savedUserTemporary = await resetPasswordTemporary.save()
+            const email = userToReset.email
+            res.status(201).send(`${savedUserTemporary.name} Un email pour reinitialiser votre mot de passe vous a été envoyé pour le compte suivante : ${savedUserTemporary.name} !`)
+
+            sendEmail(name, email, token, 'resetPassword').catch(console.error);
+        } else {
+            return res.status(400).send(`Le compte ${resetPasswordTemporary.name} n'existe pas`)
+        }
+    } catch (err) {
+        return res.status(500).send('Erreur du serveur')
+    }
+})
 
 app.get('/user', async (req, res) => {
     if (!req.user) return res.redirect('/signin')
@@ -203,8 +225,7 @@ app.get('*', (req, res) => {
 "use strict";
 const nodemailer = require("nodemailer");
 
-// async..await is not allowed in global scope, must use a wrapper
-async function sendConfirmEmail(name, email, token) {
+async function sendEmail(name, email, token, mode) {
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -216,17 +237,29 @@ async function sendConfirmEmail(name, email, token) {
             pass: '!Azerty92!' // generated ethereal password
         }
     });
-
-    const mailOptions = {
-        from: '"Express_Auth 👻" <express_auth@express.com>', // sender address
-        to: email, // list of receivers
-        subject: `Hello ${name} ✔`, // Subject line
-        text: "Confirmation d'inscription", // plain text body
-        html: `<h1>Thank you for registration</h1>
+    let mailOptions
+    if (mode === 'confirmSignUp') {
+        mailOptions = {
+            from: '"Express_Auth 👻" <express_auth@express.com>', // sender address
+            to: email, // list of receivers
+            subject: `Hello ${name} ✔`, // Subject line
+            text: "Confirmation d'inscription", // plain text body
+            html: `<h1>Thank you for registration</h1>
                 <b>Please Confirm signup :</b> 
                 <p>Link : <a href='http://localhost:3000/confirm?token=${token}' target="_blank">http://localhost:3000/confirm?token=${token}</a></p>` // html body
-    };
-    
+        };
+    } else if (mode === 'resetPassword') {
+        mailOptions = {
+            from: '"Express_Auth 👻" <express_auth@express.com>', // sender address
+            to: email, // list of receivers
+            subject: `Hello ${name} ✔`, // Subject line
+            text: "Did you forgot your password ?", // plain text body
+            html: `<h1>Did you forgot your password ?</h1>
+                <b>Click on the link to reset your password :</b> 
+                <p>Link : <a href='http://localhost:3000/resetPassword?token=${token}' target="_blank">http://localhost:3000/resetPassword?token=${token}</a></p>` // html body
+        };
+    }
+
     // send mail with defined transport object
     let info = await transporter.sendMail(mailOptions, function(error, info){
         if (error) {
@@ -235,7 +268,6 @@ async function sendConfirmEmail(name, email, token) {
             console.log('Email sent: ' + info.response);
         }
     });
-
     console.log("Message sent: %s", info.messageId);
 }
 function generate_token(length){
