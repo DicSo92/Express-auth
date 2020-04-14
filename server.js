@@ -187,14 +187,15 @@ app.put('/user/:_id', urlencodedParser, async (req, res) => {
         return res.status(500).send('Erreur du serveur')
     }
 })
-app.delete('/user/:_id', async (req, res) => {
+app.post('/user/delete/:_id', async (req, res) => {
     const { _id } = req.params
     try {
         const user = await User.findByIdAndDelete(_id)
         if (!user) {
             return res.status(404).send(`Il n’y a pas d’utilisateur ${_id}`)
         }
-        return res.send(`L’utilisateur ${user._id} a bien été supprimé`)
+        // return res.send(`L’utilisateur ${user._id} a bien été supprimé`)
+        res.redirect('/user');
     } catch (err) {
         return res.status(500).send('Erreur du serveur')
     }
