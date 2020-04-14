@@ -92,10 +92,10 @@ app.get('/forgotPassword', (req, res) => {
 // -- Requests ---------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 app.post('/signup', urlencodedParser, async (req, res) => {
-    const { name, password } = req.body
+    const { name, password, email } = req.body
     const token = generate_token(25)
 
-    const newUserTemporary = new UserTemporary({ name, password, token})
+    const newUserTemporary = new UserTemporary({ name, password, email, token})
     try {
         const existingUser = await User.findOne({ name })
         if (existingUser) {
@@ -106,9 +106,9 @@ app.post('/signup', urlencodedParser, async (req, res) => {
     }
     try {
         const savedUserTemporary = await newUserTemporary.save()
-        res.status(201).send(`${savedUserTemporary.name} Un email de confirmation vous a été envoyé !`)
+        res.status(201).send(`${savedUserTemporary.name} Un email de confirmation vous a été envoyé à l'adresse suivante : ${savedUserTemporary.email} !`)
 
-        sendConfirmEmail(name, token).catch(console.error);
+        sendConfirmEmail(name, email, token).catch(console.error);
     } catch (err) {
         return res.status(500).send('Erreur du serveur')
     }
@@ -121,15 +121,16 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
         const existingUserTemporary = await UserTemporary.findOne({ token })
         if (existingUserTemporary) {
             const name = existingUserTemporary.name
+            const email = existingUserTemporary.email
             const password = existingUserTemporary.password
-            const newUser = new User({ name, password })
+            const newUser = new User({ name, email, password })
             try {
                 const existingUser = await User.findOne({ name })
                 if (existingUser) {
                     return res.status(400).send(`Le nom ${existingUser.name} est déjà utilisé`)
                 }
             } catch (err) {
-                return res.status(500).send('Erreur du serveur')
+                return res.status(500).send('Erreur du serveur #1')
             }
             try {
                 const savedUser = await newUser.save()
@@ -138,13 +139,13 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
                 existingUserTemporary.delete()
                 res.redirect('/user');
             } catch (err) {
-                return res.status(500).send('Erreur du serveur')
+                return res.status(500).send('Erreur du serveur #2')
             }
         } else {
             return res.status(400).send(`Le token ${existingUserTemporary.token} n'existe pas`)
         }
     } catch (err) {
-        return res.status(500).send('Erreur du serveur')
+        return res.status(500).send('Erreur du serveur #3')
     }
 })
 
@@ -211,7 +212,7 @@ app.get('*', (req, res) => {
 const nodemailer = require("nodemailer");
 
 // async..await is not allowed in global scope, must use a wrapper
-async function sendConfirmEmail(name, token) {
+async function sendConfirmEmail(name, email, token) {
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -225,8 +226,8 @@ async function sendConfirmEmail(name, token) {
     });
 
     const mailOptions = {
-        from: '"Fred Foo 👻" <foo@example.com>', // sender address
-        to: "luzzi.charly@gmail.com", // list of receivers
+        from: '"Express_Auth 👻" <express_auth@express.com>', // sender address
+        to: email, // list of receivers
         subject: `Hello ${name} ✔`, // Subject line
         text: "Confirmation d'inscription", // plain text body
         html: `<h1>Thank you for registration</h1>

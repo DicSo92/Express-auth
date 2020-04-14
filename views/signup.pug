@@ -11,9 +11,12 @@ html
             h1 Register
             form.w-75.mx-auto.mt-5(method='POST' action='/signup')
                 div.form-group
-                    label(for='name') User:
+                    label(for='name') User :
                     input#user.form-control(type='text', placeholder='Username...' name='name')
                 div.form-group
-                    label(for='password') Password:
+                    label(for='email') Email :
+                    input#email.form-control(type='email', placeholder='Email...' name='email')
+                div.form-group
+                    label(for='password') Password :
                     input#pw.form-control(type='password' name='password' placeholder="Password...")
                 button.btn.btn-primary(type='submit') Register
