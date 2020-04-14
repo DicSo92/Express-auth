@@ -5,6 +5,10 @@ html
         meta(charset='utf-8')
         link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css')
     body
+        a.btn.btn-primary.m-2(href=`http://localhost:3000/signup`) Signup
+
+        div.w-full.d-flex.flex-column.justify-center.align-items-center
+            h1 Login
             form.w-75.mx-auto.mt-5(method='POST' action='/signin')
                 div.form-group
                     label(for='user') Username:
