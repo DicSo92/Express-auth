@@ -158,7 +158,7 @@ app.post('/signin', urlencodedParser, passport.authenticate('local', {
 app.get('/user', async (req, res) => {
     if (!req.user) return res.redirect('/signin')
     try {
-        const users = await User.find({}).select('_id name')
+        const users = await User.find({}).select('_id name email')
         res.render('users.pug', {
             users: users
         })
