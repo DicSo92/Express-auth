@@ -76,6 +76,11 @@ app.get('/confirm', (req, res) => {
 app.get('/forgotPassword', (req, res) => {
     res.render('forgotPassword.pug')
 })
+app.get('/resetPassword', (req, res) => {
+    res.render('resetPassword.pug', {
+        token: req.query.token
+    })
+})
 // ---------------------------------------------------------------------------------------------------------------------
 // -- Requests ---------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
@@ -146,20 +151,45 @@ app.post('/forgotPassword/send', urlencodedParser, async (req, res) => {
     const { name } = req.body
     const token = generate_token(25)
 
-    const resetPasswordTemporary = new ResetPassword({ name,  token})
     try {
         const userToReset = await User.findOne({ name })
         if (userToReset) {
+            const user_id = userToReset._id
+            const resetPasswordTemporary = new ResetPassword({ user_id, name, token})
             const savedUserTemporary = await resetPasswordTemporary.save()
             const email = userToReset.email
             res.status(201).send(`${savedUserTemporary.name} Un email pour reinitialiser votre mot de passe vous a été envoyé pour le compte suivante : ${savedUserTemporary.name} !`)
 
             sendEmail(name, email, token, 'resetPassword').catch(console.error);
         } else {
-            return res.status(400).send(`Le compte ${resetPasswordTemporary.name} n'existe pas`)
+            return res.status(400).send(`Le compte ${name} n'existe pas`)
         }
     } catch (err) {
         return res.status(500).send('Erreur du serveur')
+    }
+})
+app.post('/resetPassword/:token', urlencodedParser, async (req, res) => {
+    const { token } = req.params
+    const { password } = req.body
+
+    try {
+        const existingResetPasswordTemporary = await ResetPassword.findOne({ token })
+        if (existingResetPasswordTemporary) {
+            const _id = existingResetPasswordTemporary.user_id
+            try {
+                const user = await User.findByIdAndUpdate(_id, { $set: { password } }, { new: true })
+                if (!user) {
+                    return res.status(404).send(`Il n’y a pas d’utilisateur ${_id}`)
+                }
+                return res.send(`Mot de passe de l'utilisateur ${existingResetPasswordTemporary.name} modifié`)
+            } catch (err) {
+                return res.status(500).send('Erreur du serveur')
+            }
+        } else {
+            return res.status(400).send(`Le token ${existingUserTemporary.token} n'existe pas`)
+        }
+    } catch (err) {
+        return res.status(500).send('Erreur du serveur #3')
     }
 })
 
