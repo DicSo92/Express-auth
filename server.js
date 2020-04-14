@@ -76,6 +76,10 @@ app.get('/signin', (req, res) => {
 app.get('/signup', (req, res) => {
     res.render('signup.pug')
 })
+app.get('/signout', (req, res) => {
+    req.logout();
+    res.redirect('/signin');
+})
 app.get('/confirm', (req, res) => {
     res.render('confirmRegister.pug', {
         token: req.query.token
@@ -132,6 +136,7 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
                 res.status(201).send(`${savedUser.name} enregistré avec succès avec l’ID ${savedUser._id} !`)
                 // Delete temporary User without try/catch, not necessary for now
                 existingUserTemporary.delete()
+                res.redirect('/user');
             } catch (err) {
                 return res.status(500).send('Erreur du serveur')
             }
