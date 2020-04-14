@@ -105,7 +105,11 @@ app.post('/signin', urlencodedParser, function(req, res, next) {
                 return next(err);
             }
             // return res.send({ success : true, message : 'authentication succeeded' });
-            return res.redirect('/user')
+            if (user.role) { //If Admin
+                return res.redirect('/user')
+            } else {
+                return res.redirect(`/user/${user._id}`)
+            }
         });
     })(req, res, next);
 });
@@ -251,6 +255,7 @@ app.post('/resetPassword/:token', urlencodedParser, async (req, res) => {
 
 app.get('/user', async (req, res) => {
     if (!req.user) return res.redirect('/signin')
+    if (!req.user.role) return res.redirect(`/user/${req.user._id}`) //If Admin
     try {
         const users = await User.find({}).select('_id name role email')
         res.render('users.pug', {
