@@ -84,10 +84,31 @@ app.get('/resetPassword', (req, res) => {
 // ---------------------------------------------------------------------------------------------------------------------
 // -- Requests ---------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
-app.post('/signin', urlencodedParser, passport.authenticate('local', {
-    successRedirect: '/user',
-    failureRedirect: '/signin'
-}))
+// app.post('/signin', urlencodedParser, passport.authenticate('local', {
+//     successRedirect: '/user',
+//     failureRedirect: '/signin'
+// }))
+app.post('/signin', urlencodedParser, function(req, res, next) {
+    passport.authenticate('local', function(err, user, info) {
+        if (err) {
+            return next(err); // will generate a 500 error
+        }
+        if (! user) {
+            // return res.send(401,{ success : false, message : 'authentication failed' });
+            return res.render('messageConfirm.pug', {
+                positive: false,
+                message: 'Authentication failed'
+            })
+        }
+        req.login(user, function(err){
+            if(err){
+                return next(err);
+            }
+            // return res.send({ success : true, message : 'authentication succeeded' });
+            return res.redirect('/user')
+        });
+    })(req, res, next);
+});
 
 app.post('/signup', urlencodedParser, async (req, res) => {
     const { name, password, email } = req.body
