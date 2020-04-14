@@ -11,4 +11,4 @@ Modifier le fichier .envExemple en .env et rentrer les données listé
 
 Du coup 'Signin' juste avec le nom et pas l'email
 
-De même pour forgotPassword (non fait)
+De même pour forgotPassword

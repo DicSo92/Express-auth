@@ -104,7 +104,10 @@ app.post('/signup', urlencodedParser, async (req, res) => {
     }
     try {
         const savedUserTemporary = await newUserTemporary.save()
-        res.status(201).send(`${savedUserTemporary.name} Un email de confirmation vous a été envoyé à l'adresse suivante : ${savedUserTemporary.email} !`)
+        // res.status(201).send(`${savedUserTemporary.name} Un email de confirmation vous a été envoyé à l'adresse suivante : ${savedUserTemporary.email} !`)
+        res.render('messageConfirm.pug', {
+            message: `${savedUserTemporary.name} Un email de confirmation vous a été envoyé à l'adresse suivante : ${savedUserTemporary.email} !`
+        })
 
         sendEmail(name, email, token, 'confirmSignUp').catch(console.error);
     } catch (err) {
@@ -135,7 +138,9 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
                 // res.status(201).send(`${savedUser.name} enregistré avec succès avec l’ID ${savedUser._id} !`)
 
                 existingUserTemporary.delete() // Delete temporary User without try/catch, not necessary for now
-                res.redirect('/signin');
+                res.render('messageConfirm.pug', {
+                    message: `'${savedUser.name}' enregistré avec succès !`
+                })
             } catch (err) {
                 return res.status(500).send('Erreur du serveur #2')
             }
@@ -158,7 +163,10 @@ app.post('/forgotPassword/send', urlencodedParser, async (req, res) => {
             const resetPasswordTemporary = new ResetPassword({ user_id, name, token})
             const savedUserTemporary = await resetPasswordTemporary.save()
             const email = userToReset.email
-            res.status(201).send(`${savedUserTemporary.name} Un email pour reinitialiser votre mot de passe vous a été envoyé pour le compte suivante : ${savedUserTemporary.name} !`)
+            // res.status(201).send(`${savedUserTemporary.name} : Un email pour reinitialiser votre mot de passe vous a été envoyé !`)
+            res.render('messageConfirm.pug', {
+                message: `${savedUserTemporary.name} : Un email pour reinitialiser votre mot de passe vous a été envoyé !`
+            })
 
             sendEmail(name, email, token, 'resetPassword').catch(console.error);
         } else {
@@ -181,7 +189,10 @@ app.post('/resetPassword/:token', urlencodedParser, async (req, res) => {
                 if (!user) {
                     return res.status(404).send(`Il n’y a pas d’utilisateur ${_id}`)
                 }
-                return res.send(`Mot de passe de l'utilisateur ${existingResetPasswordTemporary.name} modifié`)
+                // return res.send(`Mot de passe de l'utilisateur ${existingResetPasswordTemporary.name} modifié !`)
+                res.render('messageConfirm.pug', {
+                    message: `Mot de passe modifié avec succès !`
+                })
             } catch (err) {
                 return res.status(500).send('Erreur du serveur')
             }
