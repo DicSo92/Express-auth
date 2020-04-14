@@ -157,7 +157,9 @@ app.get('/user', async (req, res) => {
     if (!req.user) return res.redirect('/signin')
     try {
         const users = await User.find({}).select('_id name')
-        return res.send(users)
+        res.render('users.pug', {
+            users: users
+        })
     } catch (err) {
         return res.status(500).send('Erreur du serveur')
     }
