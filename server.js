@@ -134,10 +134,11 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
             }
             try {
                 const savedUser = await newUser.save()
-                res.status(201).send(`${savedUser.name} enregistré avec succès avec l’ID ${savedUser._id} !`)
+                // res.status(201).send(`${savedUser.name} enregistré avec succès avec l’ID ${savedUser._id} !`)
+                
                 // Delete temporary User without try/catch, not necessary for now
                 existingUserTemporary.delete()
-                res.redirect('/user');
+                res.redirect('/signin');
             } catch (err) {
                 return res.status(500).send('Erreur du serveur #2')
             }
