@@ -4,16 +4,18 @@ const helmet = require('helmet')
 const bodyParser = require('body-parser')
 const urlencodedParser = bodyParser.urlencoded({ extended: false })
 const mongoose = require('mongoose')
+require('dotenv').config()
 // ---------------------------------------------------------------------------------------------------------------------
 const passport = require('passport')
 const session = require('express-session')
 const LocalStrategy = require('passport-local').Strategy
 // ---------------------------------------------------------------------------------------------------------------------
 const User = require('./models/User')
+const {SESSION_SECRET, DB_USER_NAME, DB_USER_PASSWORD, DB_FILE_PATH} = process.env
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 mongoose.set('useFindAndModify', false)
-mongoose.connect('mongodb+srv://dbAdmin:qfPHnZnPpNoCqnqU@first-project-yyhpz.mongodb.net/test?retryWrites=true&w=majority', {useNewUrlParser: true, useUnifiedTopology: true})
+mongoose.connect(`mongodb+srv://${process.env.DB_USER_NAME}:${process.env.DB_USER_PASSWORD}@${process.env.DB_FILE_PATH}?retryWrites=true&w=majority`, {useNewUrlParser: true, useUnifiedTopology: true})
 const db = mongoose.connection
 db.on('error', console.error.bind(console, 'ERROR: CANNOT CONNECT TO MONGO-DB'))
 db.once('open', () => {
@@ -27,7 +29,7 @@ app.use(express.static('public'))
 // ---------------------------------------------------------------------------------------------------------------------
 // -- Passport ---------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
-app.use(session({ secret: 'masuperphrasesecrete', resave: false,
+app.use(session({ secret: process.env.SESSION_SECRET, resave: false,
     saveUninitialized: false }))
 app.use(passport.initialize())
 app.use(passport.session())
