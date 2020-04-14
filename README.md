@@ -12,3 +12,9 @@ Modifier le fichier .envExemple en .env et rentrer les données listé
 Du coup 'Signin' juste avec le nom et pas l'email
 
 De même pour forgotPassword
+
+# Fonctionnalités supplémentaire
+
+- ForgotPassword
+- Error/success page (Si autre que status 500)
+- Roles (en cour)
