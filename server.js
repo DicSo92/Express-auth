@@ -255,7 +255,7 @@ app.post('/resetPassword/:token', urlencodedParser, async (req, res) => {
 
 app.get('/user', async (req, res) => {
     if (!req.user) return res.redirect('/signin')
-    if (!req.user.role) return res.redirect(`/user/${req.user._id}`) //If Admin
+    if (!req.user.role) return res.redirect(`/user/${req.user._id}`) //If !Admin (user)
     try {
         const users = await User.find({}).select('_id name role email')
         res.render('users.pug', {
@@ -267,6 +267,7 @@ app.get('/user', async (req, res) => {
 })
 app.get('/user/:_id', async (req, res) => {
     const { _id } = req.params
+    if (!req.user.role && req.user._id !== _id) return res.redirect(`/user/${req.user._id}`) //If !Admin (user)
     try {
         const user = await User.findById(_id).select('_id name email createdAt')
         if (!user) {
