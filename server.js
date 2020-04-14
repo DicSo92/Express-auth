@@ -252,7 +252,7 @@ app.post('/resetPassword/:token', urlencodedParser, async (req, res) => {
 app.get('/user', async (req, res) => {
     if (!req.user) return res.redirect('/signin')
     try {
-        const users = await User.find({}).select('_id name email')
+        const users = await User.find({}).select('_id name role email')
         res.render('users.pug', {
             users: users
         })

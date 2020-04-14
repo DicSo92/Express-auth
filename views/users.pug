@@ -10,8 +10,11 @@ html
         div.w-75.mx-auto.mt-5.list-group.list-group-flush
             each user in users
                 a.list-group-item.list-group-item-action.d-flex.justify-content-between.align-items-center(href=`http://localhost:3000/user/${user._id}`)
-                    p.m-0=user.name
+                    p.m-0
+                        b=user.name
                     p.m-0=user.email
+                    p.m-0
+                        b=user.role ? 'Admin' : 'User'
                     form(method='POST' action=`/user/delete/${user._id}`)
                         input(type='text', style='display: none;' value=`${user._id}` name='_id')
                         button.btn.btn-danger(type='submit') Delete
