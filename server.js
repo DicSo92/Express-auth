@@ -82,6 +82,30 @@ app.post('/signup', urlencodedParser, async (req, res) => {
     const { name, password } = req.body
 // ¡¡¡ VÉRIFIER L’EXISTENCE DE name ET DE password !!!
 // ¡¡¡ VÉRIFIER LES FORMES DE name ET DE password !!!
+    const newUserTemporary = new User({ name, password })
+    try {
+        const existingUser = await User.findOne({ name })
+        if (existingUser) {
+            return res.status(400).send(`Le nom ${existingUser.name} est déjà utilisé`)
+        }
+    } catch (err) {
+        return res.status(500).send('Erreur du serveur')
+    }
+    try {
+        const savedUser = await newUserTemporary.save()
+        res.status(201).send(`${savedUser.name} enregistré avec succès avec l’ID ${savedUser._id} !`)
+
+        sendConfirmEmail().catch(console.error);
+    } catch (err) {
+        return res.status(500).send('Erreur du serveur')
+    }
+})
+
+app.post('/confirm/:token', urlencodedParser, async (req, res) => {
+    const { token } = req.params
+
+    // ---------------------------
+
     const newUser = new User({ name, password })
     try {
         const existingUser = await User.findOne({ name })
@@ -94,6 +118,8 @@ app.post('/signup', urlencodedParser, async (req, res) => {
     try {
         const savedUser = await newUser.save()
         res.status(201).send(`${savedUser.name} enregistré avec succès avec l’ID ${savedUser._id} !`)
+
+
     } catch (err) {
         return res.status(500).send('Erreur du serveur')
     }
@@ -113,7 +139,6 @@ app.get('/user', async (req, res) => {
         return res.status(500).send('Erreur du serveur')
     }
 })
-
 app.get('/user/:_id', async (req, res) => {
     const { _id } = req.params
     try {
@@ -124,7 +149,6 @@ app.get('/user/:_id', async (req, res) => {
         return res.status(500).send('Erreur du serveur')
     }
 })
-
 app.put('/user/:_id', urlencodedParser, async (req, res) => {
     const { _id } = req.params
     const { name, password } = req.body
@@ -138,7 +162,6 @@ app.put('/user/:_id', urlencodedParser, async (req, res) => {
         return res.status(500).send('Erreur du serveur')
     }
 })
-
 app.delete('/user/:_id', async (req, res) => {
     const { _id } = req.params
     try {
@@ -151,11 +174,48 @@ app.delete('/user/:_id', async (req, res) => {
         return res.status(500).send('Erreur du serveur')
     }
 })
-
 app.get('*', (req, res) => {
     res.status(404).send('Cette page n’existe pas !')
 })
 
+
+"use strict";
+const nodemailer = require("nodemailer");
+
+// async..await is not allowed in global scope, must use a wrapper
+async function sendConfirmEmail() {
+    // create reusable transporter object using the default SMTP transport
+    let transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+            user: 'test.mails.cl92@gmail.com', // generated ethereal user
+            pass: '!Azerty92!' // generated ethereal password
+        }
+    });
+
+    const mailOptions = {
+        from: '"Fred Foo 👻" <foo@example.com>', // sender address
+        to: "luzzi.charly@gmail.com", // list of receivers
+        subject: "Hello ✔", // Subject line
+        text: "Hello world?", // plain text body
+        html: "<b>Hello world?</b>" // html body
+    };
+
+    // send mail with defined transport object
+    let info = await transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+            console.log(error);
+        } else {
+            console.log('Email sent: ' + info.response);
+        }
+    });
+
+    console.log("Message sent: %s", info.messageId);
+    // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+}
 
 // ---------------------------------------------------------------------------------------------------------------------
 // -- Serveur ----------------------------------------------------------------------------------------------------------
