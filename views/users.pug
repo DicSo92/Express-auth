@@ -7,9 +7,9 @@ html
     body
         a.btn.btn-primary.m-2(href=`http://localhost:3000/signout`) Signout
 
-        ul.w-75.mx-auto.mt-5.list-group.list-group-flush
+        div.w-75.mx-auto.mt-5.list-group.list-group-flush
             each user in users
-                li.list-group-item.d-flex.justify-content-between.align-items-center
+                a.list-group-item.list-group-item-action.d-flex.justify-content-between.align-items-center(href=`http://localhost:3000/user/${user._id}`)
                     p=user.name
                     form(method='POST' action=`/user/delete/${user._id}`)
                         input(type='text', style='display: none;' value=`${user._id}` name='_id')

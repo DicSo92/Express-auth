@@ -168,7 +168,9 @@ app.get('/user/:_id', async (req, res) => {
     const { _id } = req.params
     try {
         const user = await User.findById(_id).select('_id name created')
-        return res.send(user)
+        res.render('user.pug', {
+            user: user
+        })
     } catch (err) {
         console.log(err)
         return res.status(500).send('Erreur du serveur')

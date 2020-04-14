@@ -1,0 +1,17 @@
+doctype html
+html
+    head
+        title Page #{name}
+        meta(charset='utf-8')
+        link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css')
+    body
+        a.btn.btn-primary.m-2(href=`http://localhost:3000/signout`) Signout
+        a.btn.btn-primary.m-2(href=`http://localhost:3000/user`) Users List
+
+
+        ul.w-75.mx-auto.mt-5.list-group.list-group-flush
+            h1 #{user.name}
+            h4 email.email@gmail.com
+            form(method='POST' action=`/user/delete/${user._id}`)
+                input(type='text', style='display: none;' value=`${user._id}` name='_id')
+                button.btn.btn-danger(type='submit') Delete
