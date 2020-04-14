@@ -97,7 +97,11 @@ app.post('/signup', urlencodedParser, async (req, res) => {
     try {
         const existingUser = await User.findOne({ name })
         if (existingUser) {
-            return res.status(400).send(`Le nom ${existingUser.name} est déjà utilisé`)
+            // return res.status(400).send(`Le nom ${existingUser.name} est déjà utilisé`)
+            res.render('messageConfirm.pug', {
+                positive: false,
+                message: `Le nom ${existingUser.name} est déjà utilisé`
+            })
         }
     } catch (err) {
         return res.status(500).send('Erreur du serveur')
@@ -106,6 +110,7 @@ app.post('/signup', urlencodedParser, async (req, res) => {
         const savedUserTemporary = await newUserTemporary.save()
         // res.status(201).send(`${savedUserTemporary.name} Un email de confirmation vous a été envoyé à l'adresse suivante : ${savedUserTemporary.email} !`)
         res.render('messageConfirm.pug', {
+            positive: true,
             message: `${savedUserTemporary.name} Un email de confirmation vous a été envoyé à l'adresse suivante : ${savedUserTemporary.email} !`
         })
 
@@ -128,7 +133,11 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
             try {
                 const existingUser = await User.findOne({ name })
                 if (existingUser) {
-                    return res.status(400).send(`Le nom ${existingUser.name} est déjà utilisé`)
+                    // return res.status(400).send(`Le nom ${existingUser.name} est déjà utilisé`)
+                    res.render('messageConfirm.pug', {
+                        positive: false,
+                        message: `Le nom ${existingUser.name} est déjà utilisé`
+                    })
                 }
             } catch (err) {
                 return res.status(500).send('Erreur du serveur #1')
@@ -139,13 +148,18 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
 
                 existingUserTemporary.delete() // Delete temporary User without try/catch, not necessary for now
                 res.render('messageConfirm.pug', {
+                    positive: true,
                     message: `'${savedUser.name}' enregistré avec succès !`
                 })
             } catch (err) {
                 return res.status(500).send('Erreur du serveur #2')
             }
         } else {
-            return res.status(400).send(`Le token ${existingUserTemporary.token} n'existe pas`)
+            // return res.status(400).send(`Le token ${existingUserTemporary.token} n'existe pas`)
+            res.render('messageConfirm.pug', {
+                positive: false,
+                message: `Le token ${existingUserTemporary.token} n'existe pas`
+            })
         }
     } catch (err) {
         return res.status(500).send('Erreur du serveur #3')
@@ -165,12 +179,17 @@ app.post('/forgotPassword/send', urlencodedParser, async (req, res) => {
             const email = userToReset.email
             // res.status(201).send(`${savedUserTemporary.name} : Un email pour reinitialiser votre mot de passe vous a été envoyé !`)
             res.render('messageConfirm.pug', {
+                positive: true,
                 message: `${savedUserTemporary.name} : Un email pour reinitialiser votre mot de passe vous a été envoyé !`
             })
 
             sendEmail(name, email, token, 'resetPassword').catch(console.error);
         } else {
-            return res.status(400).send(`Le compte ${name} n'existe pas`)
+            // return res.status(400).send(`Le compte ${name} n'existe pas`)
+            res.render('messageConfirm.pug', {
+                positive: false,
+                message: `Le compte ${name} n'existe pas`
+            })
         }
     } catch (err) {
         return res.status(500).send('Erreur du serveur')
@@ -191,13 +210,18 @@ app.post('/resetPassword/:token', urlencodedParser, async (req, res) => {
                 }
                 // return res.send(`Mot de passe de l'utilisateur ${existingResetPasswordTemporary.name} modifié !`)
                 res.render('messageConfirm.pug', {
+                    positive: true,
                     message: `Mot de passe modifié avec succès !`
                 })
             } catch (err) {
                 return res.status(500).send('Erreur du serveur')
             }
         } else {
-            return res.status(400).send(`Le token ${existingUserTemporary.token} n'existe pas`)
+            // return res.status(400).send(`Le token ${existingUserTemporary.token} n'existe pas`)
+            res.render('messageConfirm.pug', {
+                positive: false,
+                message: `Le token ${existingUserTemporary.token} n'existe pas`
+            })
         }
     } catch (err) {
         return res.status(500).send('Erreur du serveur #3')
@@ -219,24 +243,17 @@ app.get('/user/:_id', async (req, res) => {
     const { _id } = req.params
     try {
         const user = await User.findById(_id).select('_id name email createdAt')
+        if (!user) {
+            res.render('messageConfirm.pug', {
+                positive: false,
+                message: `Cet utilisateur n'existe pas`
+            })
+        }
         res.render('user.pug', {
             user: user
         })
     } catch (err) {
         console.log(err)
-        return res.status(500).send('Erreur du serveur')
-    }
-})
-app.put('/user/:_id', urlencodedParser, async (req, res) => {
-    const { _id } = req.params
-    const { name, password } = req.body
-    try {
-        const user = await User.findByIdAndUpdate(_id, { $set: { name, password } }, { new: true })
-        if (!user) {
-            return res.status(404).send(`Il n’y a pas d’utilisateur ${_id}`)
-        }
-        return res.send(`Utilisateur ${user._id} modifié`)
-    } catch (err) {
         return res.status(500).send('Erreur du serveur')
     }
 })

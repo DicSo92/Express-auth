@@ -10,4 +10,7 @@ html
         a.btn.btn-primary.m-2(href=`http://localhost:3000/signup`) Signup
 
         div.w-full.d-flex.flex-column.justify-center.align-items-center
-            h3.text-success #{message}
+            if positive
+                h3.text-success #{message}
+            else
+                h3.text-danger #{message}
