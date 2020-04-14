@@ -81,6 +81,9 @@ app.get('/confirm', (req, res) => {
         token: req.query.token
     })
 })
+app.get('/forgotPassword', (req, res) => {
+    res.render('forgotPassword.pug')
+})
 // ---------------------------------------------------------------------------------------------------------------------
 // -- Requests ---------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
@@ -127,6 +130,7 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
             try {
                 const savedUser = await newUser.save()
                 res.status(201).send(`${savedUser.name} enregistré avec succès avec l’ID ${savedUser._id} !`)
+                // Delete temporary User without try/catch, not necessary for now
                 existingUserTemporary.delete()
             } catch (err) {
                 return res.status(500).send('Erreur du serveur')
