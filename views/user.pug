@@ -11,7 +11,10 @@ html
 
         ul.w-75.mx-auto.mt-5.list-group.list-group-flush
             h1 #{user.name}
-            h4 email.email@gmail.com
+            h4 #{user.email}
+            p.m-0
+                b CreatedAt :
+            p #{user.createdAt}
             form(method='POST' action=`/user/delete/${user._id}`)
                 input(type='text', style='display: none;' value=`${user._id}` name='_id')
                 button.btn.btn-danger(type='submit') Delete

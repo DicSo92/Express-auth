@@ -135,7 +135,7 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
             try {
                 const savedUser = await newUser.save()
                 // res.status(201).send(`${savedUser.name} enregistré avec succès avec l’ID ${savedUser._id} !`)
-                
+
                 // Delete temporary User without try/catch, not necessary for now
                 existingUserTemporary.delete()
                 res.redirect('/signin');
@@ -169,7 +169,7 @@ app.get('/user', async (req, res) => {
 app.get('/user/:_id', async (req, res) => {
     const { _id } = req.params
     try {
-        const user = await User.findById(_id).select('_id name created')
+        const user = await User.findById(_id).select('_id name email createdAt')
         res.render('user.pug', {
             user: user
         })
