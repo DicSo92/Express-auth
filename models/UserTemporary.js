@@ -13,6 +13,11 @@ const userTemporarySchema = new Schema({
     token: {
         type: String,
         required: true
+    },
+    createdAt: {
+        type: Date,
+        expires: '1m',
+        default: Date.now
     }
 }, { collection: 'usersTemporary' })
 

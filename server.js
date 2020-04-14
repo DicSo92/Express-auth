@@ -11,6 +11,7 @@ const session = require('express-session')
 const LocalStrategy = require('passport-local').Strategy
 // ---------------------------------------------------------------------------------------------------------------------
 const User = require('./models/User')
+const UserTemporary = require('./models/UserTemporary')
 const {SESSION_SECRET, DB_USER_NAME, DB_USER_PASSWORD, DB_FILE_PATH} = process.env
 // ---------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
@@ -75,14 +76,19 @@ app.get('/signin', (req, res) => {
 app.get('/signup', (req, res) => {
     res.render('signup.pug')
 })
+app.get('/confirm', (req, res) => {
+    res.render('confirmRegister.pug', {
+        token: req.query.token
+    })
+})
 // ---------------------------------------------------------------------------------------------------------------------
 // -- Requests ---------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------
 app.post('/signup', urlencodedParser, async (req, res) => {
     const { name, password } = req.body
-// ¡¡¡ VÉRIFIER L’EXISTENCE DE name ET DE password !!!
-// ¡¡¡ VÉRIFIER LES FORMES DE name ET DE password !!!
-    const newUserTemporary = new User({ name, password })
+    const token = generate_token(25)
+
+    const newUserTemporary = new UserTemporary({ name, password, token})
     try {
         const existingUser = await User.findOne({ name })
         if (existingUser) {
@@ -92,34 +98,42 @@ app.post('/signup', urlencodedParser, async (req, res) => {
         return res.status(500).send('Erreur du serveur')
     }
     try {
-        const savedUser = await newUserTemporary.save()
-        res.status(201).send(`${savedUser.name} enregistré avec succès avec l’ID ${savedUser._id} !`)
+        const savedUserTemporary = await newUserTemporary.save()
+        res.status(201).send(`${savedUserTemporary.name} Un email de confirmation vous a été envoyé !`)
 
-        sendConfirmEmail().catch(console.error);
+        sendConfirmEmail(name, token).catch(console.error);
     } catch (err) {
         return res.status(500).send('Erreur du serveur')
     }
 })
 
-app.post('/confirm/:token', urlencodedParser, async (req, res) => {
+app.get('/confirm/:token', urlencodedParser, async (req, res) => {
     const { token } = req.params
 
-    // ---------------------------
-
-    const newUser = new User({ name, password })
     try {
-        const existingUser = await User.findOne({ name })
-        if (existingUser) {
-            return res.status(400).send(`Le nom ${existingUser.name} est déjà utilisé`)
+        const existingUserTemporary = await UserTemporary.findOne({ token })
+        if (existingUserTemporary) {
+            const name = existingUserTemporary.name
+            const password = existingUserTemporary.password
+            const newUser = new User({ name, password })
+            try {
+                const existingUser = await User.findOne({ name })
+                if (existingUser) {
+                    return res.status(400).send(`Le nom ${existingUser.name} est déjà utilisé`)
+                }
+            } catch (err) {
+                return res.status(500).send('Erreur du serveur')
+            }
+            try {
+                const savedUser = await newUser.save()
+                res.status(201).send(`${savedUser.name} enregistré avec succès avec l’ID ${savedUser._id} !`)
+                existingUserTemporary.delete()
+            } catch (err) {
+                return res.status(500).send('Erreur du serveur')
+            }
+        } else {
+            return res.status(400).send(`Le token ${existingUserTemporary.token} n'existe pas`)
         }
-    } catch (err) {
-        return res.status(500).send('Erreur du serveur')
-    }
-    try {
-        const savedUser = await newUser.save()
-        res.status(201).send(`${savedUser.name} enregistré avec succès avec l’ID ${savedUser._id} !`)
-
-
     } catch (err) {
         return res.status(500).send('Erreur du serveur')
     }
@@ -183,7 +197,7 @@ app.get('*', (req, res) => {
 const nodemailer = require("nodemailer");
 
 // async..await is not allowed in global scope, must use a wrapper
-async function sendConfirmEmail() {
+async function sendConfirmEmail(name, token) {
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -199,9 +213,11 @@ async function sendConfirmEmail() {
     const mailOptions = {
         from: '"Fred Foo 👻" <foo@example.com>', // sender address
         to: "luzzi.charly@gmail.com", // list of receivers
-        subject: "Hello ✔", // Subject line
-        text: "Hello world?", // plain text body
-        html: "<b>Hello world?</b>" // html body
+        subject: `Hello ${name} ✔`, // Subject line
+        text: "Confirmation d'inscription", // plain text body
+        html: `<h1>Thank you for registration</h1>
+                <b>Please Confirm signup :</b> 
+                <p>Link : <a href='http://localhost:3000/confirm?token=${token}' target="_blank">http://localhost:3000/confirm?token=${token}</a></p>` // html body
     };
 
     // send mail with defined transport object
@@ -215,6 +231,15 @@ async function sendConfirmEmail() {
 
     console.log("Message sent: %s", info.messageId);
     // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+}
+function generate_token(length){
+    let a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
+    let b = [];
+    for (let i=0; i<length; i++) {
+        let j = (Math.random() * (a.length-1)).toFixed(0);
+        b[i] = a[j];
+    }
+    return b.join("");
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
