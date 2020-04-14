@@ -119,7 +119,7 @@ app.post('/signup', urlencodedParser, async (req, res) => {
         const existingUser = await User.findOne({ name })
         if (existingUser) {
             // return res.status(400).send(`Le nom ${existingUser.name} est déjà utilisé`)
-            res.render('messageConfirm.pug', {
+            return res.render('messageConfirm.pug', {
                 positive: false,
                 message: `Le nom ${existingUser.name} est déjà utilisé`
             })
@@ -155,7 +155,7 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
                 const existingUser = await User.findOne({ name })
                 if (existingUser) {
                     // return res.status(400).send(`Le nom ${existingUser.name} est déjà utilisé`)
-                    res.render('messageConfirm.pug', {
+                    return res.render('messageConfirm.pug', {
                         positive: false,
                         message: `Le nom ${existingUser.name} est déjà utilisé`
                     })
@@ -177,7 +177,7 @@ app.get('/confirm/:token', urlencodedParser, async (req, res) => {
             }
         } else {
             // return res.status(400).send(`Le token ${existingUserTemporary.token} n'existe pas`)
-            res.render('messageConfirm.pug', {
+            return res.render('messageConfirm.pug', {
                 positive: false,
                 message: `Le token ${existingUserTemporary.token} n'existe pas`
             })
@@ -207,7 +207,7 @@ app.post('/forgotPassword/send', urlencodedParser, async (req, res) => {
             sendEmail(name, email, token, 'resetPassword').catch(console.error);
         } else {
             // return res.status(400).send(`Le compte ${name} n'existe pas`)
-            res.render('messageConfirm.pug', {
+            return res.render('messageConfirm.pug', {
                 positive: false,
                 message: `Le compte ${name} n'existe pas`
             })
@@ -239,7 +239,7 @@ app.post('/resetPassword/:token', urlencodedParser, async (req, res) => {
             }
         } else {
             // return res.status(400).send(`Le token ${existingUserTemporary.token} n'existe pas`)
-            res.render('messageConfirm.pug', {
+            return res.render('messageConfirm.pug', {
                 positive: false,
                 message: `Le token ${existingUserTemporary.token} n'existe pas`
             })
@@ -265,7 +265,7 @@ app.get('/user/:_id', async (req, res) => {
     try {
         const user = await User.findById(_id).select('_id name email createdAt')
         if (!user) {
-            res.render('messageConfirm.pug', {
+            return res.render('messageConfirm.pug', {
                 positive: false,
                 message: `Cet utilisateur n'existe pas`
             })
